@@ -1,0 +1,54 @@
+version: "3"
+
+services:
+    web:
+        build: .
+        restart: always
+        volumes:
+            - ./src:/home/app/src
+        command: sh -c "/usr/local/bin/python3 /home/app/src/manage.py migrate && /usr/local/bin/python3 /home/app/src/manage.py runserver 0.0.0.0:8000"
+        ports:
+            - "8000:8000"
+        depends_on:
+            - master
+        env_file:
+            - ./.env
+    master:
+        restart: always
+        image: postgres:12.0-alpine
+        volumes:
+            - master_vol:/var/lib/postgresql
+        environment:
+            - POSTGRES_NAME=postgres
+            - POSTGRES_DB=postgres
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres
+            - DEBUG=False
+            - REPLICATION_MODE=master
+            - REPLICATION_USER=replicator
+            - REPLICATION_PASS=replpassword
+            - REPLICATION_SSLMODE=
+
+volumes:
+    master_vol:
+        driver: "local"
+    sessions:
+        driver: "local"
+#  slave:
+#    restart: always
+#    build: ./database-slave
+#    volumes:
+#      - slave_vol:/var/lib/postgresql
+#    ports:
+#      - "5432"
+#    links:
+#      - master:master
+#    environment:
+#      - DEBUG=false
+#      - REPLICATION_MODE=slave
+#      - REPLICATION_HOST=master
+#      - REPLICATION_USER=replicator
+#      - REPLICATION_PASS=replpassword
+
+#slave_vol:
+#  driver: "local"
